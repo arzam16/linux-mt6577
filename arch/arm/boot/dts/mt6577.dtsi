@@ -29,6 +29,32 @@
 		};
 	};
 
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+		
+		resmem0: memory@c5000000 {
+			reg = <0xc5000000 0xaffffff>;
+			no-map;
+		};
+		
+		resmem1: memory@e0000000 {
+			reg = <0xe0000000 0xfffffff>;
+			no-map;
+		};
+		
+		resmem2: memory@f0010000 {
+			reg = <0xf0010000 0xffdffff>;
+			no-map;
+		};
+		
+		resmem3: memory@f8000000 {
+			reg = <0xf8000000 0xc>;
+			no-map;
+		};
+	};
+
 	clocks {
 		#address-cells = <1>;
 		#size-cells = <1>;
