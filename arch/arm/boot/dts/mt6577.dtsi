@@ -1,0 +1,111 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/*
+ * Author: Boris Lysov <arzamas-16@mail.ee>
+ */
+
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+
+/ {
+	compatible = "mediatek,mt6577";
+	#address-cells = <1>;
+	#size-cells = <1>;
+	interrupt-parent = <&sysirq>;
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a9";
+			reg = <0>;
+		};
+		
+		cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a9";
+			reg = <1>;
+		};
+	};
+
+	clocks {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		
+		system_clk: oscillator_sys {
+			compatible = "fixed-clock";
+			clock-frequency = <13000000>;
+			#clock-cells = <0>;
+		};
+		
+		rtc_clk: oscillator_rtc {
+			compatible = "fixed-clock";
+			clock-frequency = <32768>;
+			#clock-cells = <0>;
+		};
+		
+		uart_clk: oscillator_uart {
+			compatible = "fixed-clock";
+			clock-frequency = <41708250>;
+			#clock-cells = <0>;
+		};
+	};
+
+	timer: timer@c1002000 {
+		compatible = "mediatek,mt6577-timer";
+		reg = <0xc1002000 0x80>;
+		interrupts = <GIC_SPI 57 IRQ_TYPE_LEVEL_LOW>;
+		clocks = <&system_clk>, <&rtc_clk>;
+		clock-names = "system-clk", "rtc-clk";
+	};
+
+	sysirq: interrupt-controller@c0009050 {
+		compatible = "mediatek,mt6577-sysirq";
+		interrupt-controller;
+		#interrupt-cells = <3>;
+		interrupt-parent = <&gic>;
+		reg = <0xc0009050 0x10>;
+	};
+
+	gic: interrupt-controller@c000b000 {
+		compatible = "arm,cortex-a9-gic";
+		interrupt-controller;
+		#interrupt-cells = <3>;
+		interrupt-parent = <&gic>;
+		reg = <0xc000b000 0x1000>,
+		      <0xc000a100 0x2000>;
+	};
+
+	uart0: serial@c1009000 {
+		compatible = "mediatek,mt6577-uart";
+		reg = <0xc1009000 0x400>;
+		interrupts = <GIC_SPI 51 IRQ_TYPE_LEVEL_LOW>;
+		clocks = <&uart_clk>;
+		status = "disabled";
+	};
+
+	uart1: serial@c100a000 {
+		compatible = "mediatek,mt6577-uart";
+		reg = <0xc100a000 0x400>;
+		interrupts = <GIC_SPI 52 IRQ_TYPE_LEVEL_LOW>;
+		clocks = <&uart_clk>;
+		status = "disabled";
+	};
+
+	uart2: serial@c100b000 {
+		compatible = "mediatek,mt6577-uart";
+		reg = <0xc100b000 0x400>;
+		interrupts = <GIC_SPI 53 IRQ_TYPE_LEVEL_LOW>;
+		clocks = <&uart_clk>;
+		status = "disabled";
+	};
+
+	uart3: serial@c100c000 {
+		compatible = "mediatek,mt6577-uart";
+		reg = <0xc100c000 0x400>;
+		interrupts = <GIC_SPI 54 IRQ_TYPE_LEVEL_LOW>;
+		clocks = <&uart_clk>;
+		status = "disabled";
+	};
+};
