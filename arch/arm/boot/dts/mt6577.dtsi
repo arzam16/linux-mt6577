@@ -138,6 +138,12 @@
 		reg = <0xc000b000 0x1000>,
 		      <0xc000a100 0x2000>;
 	};
+	
+	wdt: watchdog@c0000000 {
+		compatible = "mediatek,mt6577-wdt";
+		reg = <0xc0000000 0x20>;
+		timeout-sec = <15>;
+	};
 
 	rng: rng@c101b000 {
 		compatible = "mediatek,mt7623-rng";
