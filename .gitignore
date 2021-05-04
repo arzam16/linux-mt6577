@@ -162,3 +162,12 @@ x509.genkey
 
 # Documentation toolchain
 sphinx_*/
+
+boot.img
+bootimg.sh
+*.bak
+patches/
+
+# The stuff I don't want to be public
+additional-files/boot*
+additional-files/git-*
