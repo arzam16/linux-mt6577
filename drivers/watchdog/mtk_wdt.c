@@ -56,6 +56,10 @@
 #define MT2712_SWSYSRST_KEY_SHIFT	24		// unlock_key [31:24]
 #define MT2712_SWSYSRST_KEY		0x88
 
+#define MT6577_WDT_MODE_KEY_SHIFT	8		// unlock_key [15:8]
+#define MT6577_SWSYSRST_KEY_SHIFT	8		// unlock_key [15:8]
+#define MT6577_SWSYSRST_KEY		0x15
+
 #define MT6589_WDT_MODE_KEY_SHIFT	24		// unlock_key [31:24]
 #define MT6589_SWSYSRST_KEY_SHIFT	24		// unlock_key [31:24]
 #define MT6589_SWSYSRST_KEY		0x88
@@ -99,6 +103,13 @@ static const struct mtk_wdt_data mt2712_data = {
 	.wdt_mode_key_shift =		MT2712_WDT_MODE_KEY_SHIFT,
 	.wdt_swsys_rst_key_shift =	MT2712_SWSYSRST_KEY_SHIFT,
 	.wdt_swsys_rst_key =		MT2712_SWSYSRST_KEY,
+};
+
+static const struct mtk_wdt_data mt6577_data = {
+	.toprgu_sw_rst_num =		-1,
+	.wdt_mode_key_shift =		MT6577_WDT_MODE_KEY_SHIFT,
+	.wdt_swsys_rst_key_shift =	MT6577_SWSYSRST_KEY_SHIFT,
+	.wdt_swsys_rst_key =		MT6577_SWSYSRST_KEY,
 };
 
 static const struct mtk_wdt_data mt6589_data = {
@@ -462,6 +473,7 @@ static int mtk_wdt_resume(struct device *dev)
 
 static const struct of_device_id mtk_wdt_dt_ids[] = {
 	{ .compatible = "mediatek,mt2712-wdt", .data = &mt2712_data },
+	{ .compatible = "mediatek,mt6577-wdt", .data = &mt6577_data },
 	{ .compatible = "mediatek,mt6589-wdt", .data = &mt6589_data },
 	{ .compatible = "mediatek,mt8183-wdt", .data = &mt8183_data },
 	{ .compatible = "mediatek,mt8192-wdt", .data = &mt8192_data },
