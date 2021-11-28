@@ -78,6 +78,11 @@
 		cache-level = <2>;
 	};
 
+	infracfg: infracfg@c0001030 {
+		compatible = "mediatek,mt6577-infracfg";
+		reg = <0xc0001030 0xed8>;
+	};
+
 	clocks {
 		#address-cells = <1>;
 		#size-cells = <1>;
