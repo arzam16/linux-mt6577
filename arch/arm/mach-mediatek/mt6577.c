@@ -15,4 +15,6 @@ static const char * const mt6577_board_dt_compat[] = {
 
 DT_MACHINE_START(MEDIATEK_MT6577_DT, "Mediatek mt6577 SoC Family")
 	.dt_compat		= mt6577_board_dt_compat,
+	.l2c_aux_val	= 0x70400000,
+	.l2c_aux_mask	= 0x8fbfffff,
 MACHINE_END
