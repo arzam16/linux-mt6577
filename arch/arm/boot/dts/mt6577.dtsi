@@ -63,6 +63,11 @@
 					 <&{/cpus/cpu@1}>;
 	};
 
+	scu: snoop-control-unit@c000a000 {
+		compatible = "arm,cortex-a9-scu";
+		reg = <0xc000a000 0x100>;
+	};
+
 	clocks {
 		#address-cells = <1>;
 		#size-cells = <1>;
