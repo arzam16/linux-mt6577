@@ -68,6 +68,16 @@
 		reg = <0xc000a000 0x100>;
 	};
 
+	pl310: cache-controller@c000e000 {
+		compatible = "arm,pl310-cache";
+		reg = <0xc000e000 0x1000>;
+		interrupts = <GIC_SPI 0 IRQ_TYPE_LEVEL_HIGH>;
+		arm,data-latency = <3 0 2>;
+		arm,io-coherent;
+		cache-unified;
+		cache-level = <2>;
+	};
+
 	clocks {
 		#address-cells = <1>;
 		#size-cells = <1>;
