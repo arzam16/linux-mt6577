@@ -12,16 +12,7 @@
 #include <linux/of_address.h>
 #include <linux/string.h>
 #include <linux/threads.h>
-
-#define MTK_MAX_CPU		8
-#define MTK_SMP_REG_SIZE	0x1000
-
-struct mtk_smp_boot_info {
-	unsigned long smp_base;
-	unsigned int jump_reg;
-	unsigned int core_keys[MTK_MAX_CPU - 1];
-	unsigned int core_regs[MTK_MAX_CPU - 1];
-};
+#include "platsmp.h"
 
 static const struct mtk_smp_boot_info mtk_mt8135_tz_boot = {
 	0x80002000, 0x3fc,
