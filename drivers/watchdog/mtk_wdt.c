@@ -46,13 +46,31 @@
 #define WDT_MODE_IRQ_EN		(1 << 3)
 #define WDT_MODE_AUTO_START	(1 << 4)
 #define WDT_MODE_DUAL_EN	(1 << 6)
-#define WDT_MODE_KEY		0x22000000
+#define WDT_MODE_KEY		0x22
 
 #define WDT_SWRST		0x14
 #define WDT_SWRST_KEY		0x1209
-
 #define WDT_SWSYSRST		0x18U
-#define WDT_SWSYS_RST_KEY	0x88000000
+
+#define MT2712_WDT_MODE_KEY_SHIFT	24		// unlock_key [31:24]
+#define MT2712_SWSYSRST_KEY_SHIFT	24		// unlock_key [31:24]
+#define MT2712_SWSYSRST_KEY		0x88
+
+#define MT6589_WDT_MODE_KEY_SHIFT	24		// unlock_key [31:24]
+#define MT6589_SWSYSRST_KEY_SHIFT	24		// unlock_key [31:24]
+#define MT6589_SWSYSRST_KEY		0x88
+
+#define MT8183_WDT_MODE_KEY_SHIFT	24		// unlock_key [31:24]
+#define MT8183_SWSYSRST_KEY_SHIFT	24		// unlock_key [31:24]
+#define MT8183_SWSYSRST_KEY		0x88
+
+#define MT8192_WDT_MODE_KEY_SHIFT	24		// unlock_key [31:24]
+#define MT8192_SWSYSRST_KEY_SHIFT	24		// unlock_key [31:24]
+#define MT8192_SWSYSRST_KEY		0x88
+
+#define MT8195_WDT_MODE_KEY_SHIFT	24		// unlock_key [31:24]
+#define MT8195_SWSYSRST_KEY_SHIFT	24		// unlock_key [31:24]
+#define MT8195_SWSYSRST_KEY		0x88
 
 #define DRV_NAME		"mtk-wdt"
 #define DRV_VERSION		"1.0"
@@ -62,6 +80,7 @@ static unsigned int timeout;
 
 struct mtk_wdt_dev {
 	struct watchdog_device wdt_dev;
+	const struct mtk_wdt_data *config;
 	void __iomem *wdt_base;
 	spinlock_t lock; /* protects WDT_SWSYSRST reg */
 	struct reset_controller_dev rcdev;
@@ -70,22 +89,44 @@ struct mtk_wdt_dev {
 
 struct mtk_wdt_data {
 	int toprgu_sw_rst_num;
+	u8 wdt_mode_key_shift;
+	u8 wdt_swsys_rst_key;
+	u8 wdt_swsys_rst_key_shift;
 };
 
 static const struct mtk_wdt_data mt2712_data = {
-	.toprgu_sw_rst_num = MT2712_TOPRGU_SW_RST_NUM,
+	.toprgu_sw_rst_num =		MT2712_TOPRGU_SW_RST_NUM,
+	.wdt_mode_key_shift =		MT2712_WDT_MODE_KEY_SHIFT,
+	.wdt_swsys_rst_key_shift =	MT2712_SWSYSRST_KEY_SHIFT,
+	.wdt_swsys_rst_key =		MT2712_SWSYSRST_KEY,
+};
+
+static const struct mtk_wdt_data mt6589_data = {
+	.toprgu_sw_rst_num =		-1,
+	.wdt_mode_key_shift =		MT6589_WDT_MODE_KEY_SHIFT,
+	.wdt_swsys_rst_key_shift =	MT6589_SWSYSRST_KEY_SHIFT,
+	.wdt_swsys_rst_key =		MT6589_SWSYSRST_KEY,
 };
 
 static const struct mtk_wdt_data mt8183_data = {
-	.toprgu_sw_rst_num = MT8183_TOPRGU_SW_RST_NUM,
+	.toprgu_sw_rst_num =		MT8183_TOPRGU_SW_RST_NUM,
+	.wdt_mode_key_shift =		MT8183_WDT_MODE_KEY_SHIFT,
+	.wdt_swsys_rst_key_shift =	MT8183_SWSYSRST_KEY_SHIFT,
+	.wdt_swsys_rst_key =		MT8183_SWSYSRST_KEY,
 };
 
 static const struct mtk_wdt_data mt8192_data = {
-	.toprgu_sw_rst_num = MT8192_TOPRGU_SW_RST_NUM,
+	.toprgu_sw_rst_num =		MT8192_TOPRGU_SW_RST_NUM,
+	.wdt_mode_key_shift =		MT8192_WDT_MODE_KEY_SHIFT,
+	.wdt_swsys_rst_key_shift =	MT8192_SWSYSRST_KEY_SHIFT,
+	.wdt_swsys_rst_key =		MT8192_SWSYSRST_KEY,
 };
 
 static const struct mtk_wdt_data mt8195_data = {
-	.toprgu_sw_rst_num = MT8195_TOPRGU_SW_RST_NUM,
+	.toprgu_sw_rst_num =		MT8195_TOPRGU_SW_RST_NUM,
+	.wdt_mode_key_shift =		MT8195_WDT_MODE_KEY_SHIFT,
+	.wdt_swsys_rst_key_shift =	MT8195_SWSYSRST_KEY_SHIFT,
+	.wdt_swsys_rst_key =		MT8195_SWSYSRST_KEY,
 };
 
 static int toprgu_reset_update(struct reset_controller_dev *rcdev,
@@ -103,7 +144,7 @@ static int toprgu_reset_update(struct reset_controller_dev *rcdev,
 		tmp |= BIT(id);
 	else
 		tmp &= ~BIT(id);
-	tmp |= WDT_SWSYS_RST_KEY;
+	tmp |= data->config->wdt_swsys_rst_key << data->config->wdt_swsys_rst_key_shift;
 	writel(tmp, data->wdt_base + WDT_SWSYSRST);
 
 	spin_unlock_irqrestore(&data->lock, flags);
@@ -235,7 +276,7 @@ static int mtk_wdt_stop(struct watchdog_device *wdt_dev)
 
 	reg = readl(wdt_base + WDT_MODE);
 	reg &= ~WDT_MODE_EN;
-	reg |= WDT_MODE_KEY;
+	reg |= WDT_MODE_KEY << mtk_wdt->config->wdt_mode_key_shift;
 	iowrite32(reg, wdt_base + WDT_MODE);
 
 	return 0;
@@ -259,7 +300,7 @@ static int mtk_wdt_start(struct watchdog_device *wdt_dev)
 		reg &= ~(WDT_MODE_IRQ_EN | WDT_MODE_DUAL_EN);
 	if (mtk_wdt->disable_wdt_extrst)
 		reg &= ~WDT_MODE_EXRST_EN;
-	reg |= (WDT_MODE_EN | WDT_MODE_KEY);
+	reg |= (WDT_MODE_EN | (WDT_MODE_KEY << mtk_wdt->config->wdt_mode_key_shift));
 	iowrite32(reg, wdt_base + WDT_MODE);
 
 	return 0;
@@ -326,7 +367,6 @@ static int mtk_wdt_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 	struct mtk_wdt_dev *mtk_wdt;
-	const struct mtk_wdt_data *wdt_data;
 	int err, irq;
 
 	mtk_wdt = devm_kzalloc(dev, sizeof(*mtk_wdt), GFP_KERNEL);
@@ -338,6 +378,12 @@ static int mtk_wdt_probe(struct platform_device *pdev)
 	mtk_wdt->wdt_base = devm_platform_ioremap_resource(pdev, 0);
 	if (IS_ERR(mtk_wdt->wdt_base))
 		return PTR_ERR(mtk_wdt->wdt_base);
+	
+	mtk_wdt->config = of_device_get_match_data(dev);
+	if (!mtk_wdt->config) {
+		dev_err(dev, "watchdog data is not defined\n");
+		return -EINVAL;
+	}
 
 	irq = platform_get_irq_optional(pdev, 0);
 	if (irq > 0) {
@@ -377,10 +423,9 @@ static int mtk_wdt_probe(struct platform_device *pdev)
 	dev_info(dev, "Watchdog enabled (timeout=%d sec, nowayout=%d)\n",
 		 mtk_wdt->wdt_dev.timeout, nowayout);
 
-	wdt_data = of_device_get_match_data(dev);
-	if (wdt_data) {
+	if (mtk_wdt->config->toprgu_sw_rst_num > -1) {
 		err = toprgu_register_reset_controller(pdev,
-						       wdt_data->toprgu_sw_rst_num);
+						       mtk_wdt->config->toprgu_sw_rst_num);
 		if (err)
 			return err;
 	}
@@ -417,7 +462,7 @@ static int mtk_wdt_resume(struct device *dev)
 
 static const struct of_device_id mtk_wdt_dt_ids[] = {
 	{ .compatible = "mediatek,mt2712-wdt", .data = &mt2712_data },
-	{ .compatible = "mediatek,mt6589-wdt" },
+	{ .compatible = "mediatek,mt6589-wdt", .data = &mt6589_data },
 	{ .compatible = "mediatek,mt8183-wdt", .data = &mt8183_data },
 	{ .compatible = "mediatek,mt8192-wdt", .data = &mt8192_data },
 	{ .compatible = "mediatek,mt8195-wdt", .data = &mt8195_data },
