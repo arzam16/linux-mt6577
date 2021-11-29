@@ -82,6 +82,11 @@
 		compatible = "mediatek,mt6577-infracfg";
 		reg = <0xc0001030 0xed8>;
 	};
+	
+	mcusys: mcusys@c0009000 {
+		compatible = "mediatek,mt6577-mcusys";
+		reg = <0xc0009000 0xB0>;
+	};
 
 	clocks {
 		#address-cells = <1>;
