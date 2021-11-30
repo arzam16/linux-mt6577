@@ -23,48 +23,72 @@ static void __iomem *mtk_smp_base;
 static void __iomem *scu_base;
 static void __iomem *mcusys_base;
 
-static void __init mt6577_smp_prepare_cpus(unsigned int max_cpus)
+static int mt6577_map_smp_hw(void)
 {
 	struct device_node *node;
 	
 	mtk_smp_base = ioremap(mtk_mt6577_boot.smp_base, MTK_SMP_REG_SIZE);
 	if (!mtk_smp_base) {
-		pr_err("%s: Can't remap %lx\n", __func__,
+		pr_err("%s: can't remap smp base %lx\n", __func__,
 			mtk_mt6577_boot.smp_base);
-		return;
+		return -EFAULT;
 	}
 	
-	spin_lock_init(&cpu1_pwr_ctr_lock);
-	
-	// Map MCUSYS to reset CPU1 state now and power it on later
     node = of_find_compatible_node(NULL, NULL, "mediatek,mt6577-mcusys");
 	if (!node) {
 		pr_err("%s: missing mcusys in device tree\n", __func__);
-		return;
+		return -ENODEV;
 	}
 	
 	mcusys_base = of_iomap(node, 0);
 	of_node_put(node);
 	if (!mcusys_base) {
-		pr_err("%s: Can't remap mcusys registers\n", __func__);
-		return;
+		pr_err("%s: can't remap mcusys registers\n", __func__);
+		return -EFAULT;
 	}
 	
-	mt6577_reset_cpu1();
-	
-	// Map SCU to enable it now and power on the CPU1 later
 	node = of_find_compatible_node(NULL, NULL, "arm,cortex-a9-scu");
 	if (!node) {
 		pr_err("%s: missing scu in device tree\n", __func__);
-		return;
+		return -ENODEV;
 	}
 	
 	scu_base = of_iomap(node, 0);
 	of_node_put(node);
 	if (!scu_base) {
-		pr_err("%s: Can't remap scu registers\n", __func__);
+		pr_err("%s: can't remap scu registers\n", __func__);
+		return -EFAULT;
 	}
+	
+	return 0;
+}
 
+static void mt6577_unmap_smp_hw(void)
+{
+	if (mtk_smp_base)
+		iounmap(mtk_smp_base);
+	
+	if (mcusys_base)
+		iounmap(mcusys_base);
+	
+	if (scu_base)
+		iounmap(scu_base);
+}
+
+static void __init mt6577_smp_prepare_cpus(unsigned int max_cpus)
+{
+	/*
+	 * map hardware now and unmap it after CPU1
+	 * comes up online in mt6577_boot_secondary
+	 */
+	if (mt6577_map_smp_hw() != 0)
+		return;
+	
+	spin_lock_init(&cpu1_pwr_ctr_lock);
+	
+	// quickly reset CPU1
+	mt6577_reset_cpu1();
+	
 	scu_enable(scu_base);
 
 	/*
@@ -90,8 +114,7 @@ static int mt6577_boot_secondary(unsigned int cpu, struct task_struct *idle)
 
 	arch_send_wakeup_ipi_mask(cpumask_of(cpu));
     
-    iounmap(mcusys_base);
-    iounmap(scu_base);
+    mt6577_unmap_smp_hw();
 
 	return 0;
 }
