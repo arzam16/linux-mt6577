@@ -26,6 +26,13 @@ config MTK_DEVAPC
 	  The violation information is logged for further analysis or
 	  countermeasures.
 
+config MTK_HARDWARE_ID
+	tristate "Mediatek Hardware ID Support"
+	help
+	  Say yes here to enable support for reading hardware identifiers such
+	  as CPU revision, hardware subversion and serial number. This simple
+	  driver is used to let kernel know of what hardware it actually runs.
+
 config MTK_INFRACFG
 	bool "MediaTek INFRACFG Support"
 	select REGMAP
