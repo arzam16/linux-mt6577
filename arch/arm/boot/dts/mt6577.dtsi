@@ -49,11 +49,12 @@
 			reg = <0xf0010000 0xffdffff>;
 			no-map;
 		};
-		
-		resmem3: memory@f8000000 {
-			reg = <0xf8000000 0xc>;
-			no-map;
-		};
+	};
+
+	hardware-id@f8000000 {
+		compatible = "mediatek,mt6577-hwid";
+		reg = <0xf8000000 0x10>,
+				<0xc1019100 0x50>;
 	};
 
 	pmu {
