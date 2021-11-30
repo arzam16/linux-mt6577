@@ -119,6 +119,19 @@ static int mt6577_boot_secondary(unsigned int cpu, struct task_struct *idle)
 	return 0;
 }
 
+static int mt6577_cpu_kill(unsigned int cpu)
+{
+	if (mt6577_map_smp_hw() != 0) {
+		pr_err("%s: can't kill CPU%d due to unmapped hw\n", __func__, cpu);
+		return 0;
+	}
+	
+	mt6577_power_off_cpu1();
+	mt6577_unmap_smp_hw();
+	
+	return 1;
+}
+
 /*
  * Thanks to the ancient bootloader, CPU1 may not be reset clearly after
  * powering on the device which might affect bringing it up on boot.
@@ -197,6 +210,57 @@ static void mt6577_power_on_cpu1(void)
     // Finally set PWR_CTL1[25:24] = 0 to make CPU1 come up online
     val = readl(mcusys_base + PWR_CTL1) & 0xfcffffff;
     writel(val, mcusys_base + PWR_CTL1);
+    mb();
+    
+    spin_unlock_irqrestore(&cpu1_pwr_ctr_lock, flags);
+}
+
+static void mt6577_power_off_cpu1(void)
+{
+	unsigned long flags;
+	u32 val;
+	
+    spin_lock_irqsave(&cpu1_pwr_ctr_lock, flags);
+    
+    /* Set PWR_CTL1[25:24] = 11 for shutdown mode */
+    val = readl(mcusys_base + PWR_CTL1) | 0x03000000;
+    writel(val, mcusys_base + PWR_CTL1);
+    
+    /* Polling PWR_MON[13] = 1 to make sure CPU1 is in WFI */
+    while (!(readl(mcusys_base + PWR_MON) & BIT(13)));
+    
+    /* Turn off neon1 */
+    val = readl(mcusys_base + PWR_CTL1) | 0x00000400;
+    writel(val, mcusys_base + PWR_CTL1);
+    val = readl(mcusys_base + PWR_CTL1) | 0x00000100;
+    writel(val, mcusys_base + PWR_CTL1);
+    val = readl(mcusys_base + PWR_CTL1) | 0x00000200;
+    writel(val, mcusys_base + PWR_CTL1);
+    val = readl(mcusys_base + PWR_CTL1) & 0xfffff7ff;
+    writel(val, mcusys_base + PWR_CTL1);
+    
+    /* Set PWR_CTL1[14] = 1 */
+    val = readl(mcusys_base + PWR_CTL1) | 0x00004000;
+    writel(val, mcusys_base + PWR_CTL1);
+    
+    /* Set PWR_CTL1[12] = 1 */
+    val = readl(mcusys_base + PWR_CTL1) | 0x00001000;
+    writel(val, mcusys_base + PWR_CTL1);
+    
+    /* Set PWR_CTL1[13] = 1 */
+    val = readl(mcusys_base + PWR_CTL1) | 0x00002000;
+    writel(val, mcusys_base + PWR_CTL1);
+    
+    /* Set PWR_CTL1[3:0] = 1111 for shutdown mode */
+    val = readl(mcusys_base + PWR_CTL1) | 0x0000000f;
+    writel(val, mcusys_base + PWR_CTL1);
+    mb();
+    mdelay(2); // delay 2ms
+    
+    /* Set PWR_CTL1[15] = 0 */
+    val = readl(mcusys_base + PWR_CTL1) & 0xffff7fff;
+    writel(val, mcusys_base + PWR_CTL1);
+    
     mb();
     
     spin_unlock_irqrestore(&cpu1_pwr_ctr_lock, flags);
