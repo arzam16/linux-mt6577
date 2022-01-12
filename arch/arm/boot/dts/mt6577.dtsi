@@ -100,6 +100,14 @@
 			#clock-cells = <0>;
 		};
 	};
+	
+	twd: timer@c000a600 {
+		compatible = "arm,cortex-a9-twd-timer";
+		reg = <0xc000a600 0x20>;
+		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(2) |
+									IRQ_TYPE_LEVEL_HIGH)>;
+		clocks = <&system_clk>;
+	};
 
 	timer: timer@c1002000 {
 		compatible = "mediatek,mt6577-timer";
