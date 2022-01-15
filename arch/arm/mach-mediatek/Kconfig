@@ -18,6 +18,7 @@ config MACH_MT2701
 config MACH_MT6577
 	bool "MediaTek MT6577 SoCs support"
 	select HAVE_ARM_SCU
+	select HAVE_ARM_TWD
 	default ARCH_MEDIATEK
 
 config MACH_MT6589
