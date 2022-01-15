@@ -134,6 +134,14 @@
 		      <0xc000a100 0x2000>;
 	};
 
+	rng: rng@c101b000 {
+		compatible = "mediatek,mt7623-rng";
+		reg = <0xc101b000 0x1000>;
+		clocks = <&rtc_clk>;
+		clock-names = "rng";
+		status = "okay";
+	};
+
 	uart0: serial@c1009000 {
 		compatible = "mediatek,mt6577-uart";
 		reg = <0xc1009000 0x400>;
