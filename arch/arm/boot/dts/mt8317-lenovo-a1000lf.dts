@@ -1,0 +1,80 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/*
+ * Author: Boris Lysov <arzamas-16@mail.ee>
+ */
+
+/dts-v1/;
+#include "mt6577.dtsi"
+
+/ {
+	model = "Lenovo IdeaTab A1000L-F";
+	compatible = "mediatek,mt8317",
+				"mediatek,mt6577";
+
+	chosen {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+		
+		// Keep some parameters from bootloader cmdline for now.
+		bootargs = "console=ttyS0,921600";
+		
+		/*
+		 * If initrd is appended to boot.img instead of being baked in
+		 * kernel image then these following values have to be
+		 * uncommented, and initrd-end value must be recalculated.
+		 */
+		// linux,initrd-start = <0x4a00000>;
+		// linux,initrd-end = <0x4aec349>;
+
+		// Use UBoot-allocated framebuffer for now
+		framebuffer0: framebuffer@1fac0000 {
+			compatible = "simple-framebuffer";
+			reg = <0x1fac0000 (1024 * 600 * 3)>;
+			width = <1024>;
+			height = <600>;
+			stride = <(1024 * 3)>;
+			format = "r8g8b8";
+		};
+	};
+
+	memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		device_type = "memory";
+		reg = <0x0 0x20000000>;
+	};
+		
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+		
+		display_mem: memory@1fac0000 {
+			// Use UBoot-allocated framebuffer for now
+			reg = <0x1fac0000 (3 * 1024 * 600 * 3)>;
+			no-map;
+		};
+	};
+};
+
+// Lenovo A1000L-F uses different clock rate for UART.
+&uart_clk {
+	clock-frequency = <65000000>;
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&uart1 {
+	status = "okay";
+};
+
+&uart2 {
+	status = "okay";
+};
+
+&uart3 {
+	status = "okay";
+};
